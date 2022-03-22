@@ -18,6 +18,7 @@ namespace WindowsFormsApp1
         int counter = 0;
 
 
+
         string[] lines;
         public Form1()
         {
@@ -40,7 +41,7 @@ namespace WindowsFormsApp1
                 IWebElement password = driver.FindElement(By.XPath("/html/body/div[1]/form/div[3]/div/div/div/div/div[3]/div/input"));
          
                 user.SendKeys("skofahi");
-                password.SendKeys("68s@K2zJVQ");
+                password.SendKeys("68s@K2zJVQ123");
             }
             catch (WebDriverTimeoutException)
             {
@@ -52,27 +53,30 @@ namespace WindowsFormsApp1
 
         private void Button2_Click(object sender, EventArgs e)
         {
+            
             int i = 0;
             DataTable table = new DataTable();
             table.Columns.Add("ID", typeof(int));
             table.Columns.Add("Confirmation", typeof(int));
-            foreach(string line in lines)
+            foreach (string line in lines)
             {
+                bool agree = false;
                 currentlyOn.Text = line;
                 IJavaScriptExecutor executor = (IJavaScriptExecutor)driver;
                 driver.Navigate().GoToUrl("https://eservices.moh.gov.sa/CoronaVaccineRegistrationMA/Home");
-                    Task.Delay(2000);
-                    IWebElement talabat = driver.FindElement(By.XPath("/html/body/div[2]/div/aside/div[2]/nav/ul/li/ul/li[2]/a/span"));
+                Task.Delay(2000);
+                IWebElement talabat = driver.FindElement(By.XPath("/html/body/div[2]/div/aside/div[2]/nav/ul/li/ul/li[2]/a/span"));
                 executor.ExecuteScript("arguments[0].click();", talabat);
                 Task.Delay(1000);
-                    IWebElement daleh = driver.FindElement(By.XPath("/html/body/div[2]/div/div/main/form/div/div[2]/div/div/div/div[2]/div[1]/div[1]/input"));
-                    daleh.SendKeys(line);
-                    IWebElement search = driver.FindElement(By.XPath("/html/body/div[2]/div/div/main/form/div/div[2]/div/div/div/div[2]/div[6]/button[1]"));
+                IWebElement daleh = driver.FindElement(By.XPath("/html/body/div[2]/div/div/main/form/div/div[2]/div/div/div/div[2]/div[1]/div[1]/input"));
+                daleh.SendKeys(line);
+                IWebElement search = driver.FindElement(By.XPath("/html/body/div[2]/div/div/main/form/div/div[2]/div/div/div/div[2]/div[6]/button[1]"));
                 executor.ExecuteScript("arguments[0].click();", search);
 
-                    IWebElement khaiart = driver.FindElement(By.XPath("/html/body/div[2]/div/div/main/form/div/div[2]/div/div/div/div[2]/table[2]/tbody/tr/th[2]"));
-                    driver.Navigate().GoToUrl("https://eservices.moh.gov.sa/CoronaVaccineRegistrationMA/VaccineRequest/Action/" + khaiart.GetAttribute("innerHTML"));
-
+                IWebElement khaiart = driver.FindElement(By.XPath("/html/body/div[2]/div/div/main/form/div/div[2]/div/div/div/div[2]/table[2]/tbody/tr/th[2]"));
+                driver.Navigate().GoToUrl("https://eservices.moh.gov.sa/CoronaVaccineRegistrationMA/VaccineRequest/Action/" + khaiart.GetAttribute("innerHTML"));
+                try
+                {
                     Task.Delay(2000).Wait();
                     IWebElement ejra2 = driver.FindElement(By.CssSelector("#select2-Model_Status-container"));
                     ((IJavaScriptExecutor)driver).ExecuteScript(script: "arguments[0].scrollIntoView(true)", ejra2);
@@ -81,50 +85,86 @@ namespace WindowsFormsApp1
 
 
                     Task.Delay(1000).Wait();
-                driver.FindElement(By.XPath("/html/body/span/span/span[2]/ul/li[2]")).Click();
-               
-               
-                    try 
+                    driver.FindElement(By.XPath("/html/body/span/span/span[2]/ul/li[2]")).Click();
+                    agree = true;
+                }
+                catch (NoSuchElementException)
+                {
+                    try
                     {
-                        IWebElement submit = driver.FindElement(By.XPath("/html/body/div[2]/div/div/main/form/div/div[2]/div/div[10]/button"));
+                        Task.Delay(2000).Wait();
+                        IWebElement ejra2 = driver.FindElement(By.CssSelector("#select2-Model_Status-container"));
+                        ((IJavaScriptExecutor)driver).ExecuteScript(script: "arguments[0].scrollIntoView(true)", ejra2);
+                        Task.Delay(1000).Wait();
+                        ejra2.Click();
+
+
+                        Task.Delay(1000).Wait();
+                        driver.FindElement(By.XPath("/html/body/span/span/span[2]/ul/li[2]")).Click();
+                        agree = true;
+                    }
+                    catch (NoSuchElementException)
+                    {
+                        dataGridView1.Rows.Add(line, "فشل في اختيار الموافقة");
+                        dataGridView1.Rows[i].Cells[1].Style.BackColor = Color.Red;
+                    }
+
+                }
+                if (agree)
+                {
+                    try
+                    {
+
+                        IWebElement submit = driver.FindElement(By.Id("submitButton"));
                         ((IJavaScriptExecutor)driver).ExecuteScript(script: "arguments[0].scrollIntoView(true)", submit);
                         submit.Click();
 
+
                         Task.Delay(5000).Wait();
-                        IWebElement NVR = driver.FindElement(By.XPath("/html/body/div[2]/div/div/main/form/div/div[2]/div/div[10]/button[2]"));
-                        executor.ExecuteScript("arguments[0].click();", NVR);
-
-                        Task.Delay(4000).Wait();
-                        IWebElement conf = driver.FindElement(By.XPath("/html/body/div[2]/div/div/main/div[3]/div/div/div[2]/div/h4"));
-
-
-                        if (conf.GetAttribute("innerHTML").Contains("تم إرسال جميع الجرعات"))
+                        try
                         {
-                            dataGridView1.Rows.Add(line, "تم إرسال جميع الجرعات");
+                            IWebElement NVR = driver.FindElement(By.XPath("/html/body/div[2]/div/div/main/form/div/div[2]/div/div[9]/button[2]"));
+                            executor.ExecuteScript("arguments[0].click();", NVR);
+                            dataGridView1.Rows.Add(line, "NVR تم ارسال الى ");
                             dataGridView1.Rows[i].Cells[1].Style.BackColor = Color.Green;
-
                         }
-                        else if (conf.GetAttribute("innerHTML").Contains("تم إرسال جرعه واحدة من هذا الطلب"))
+                        catch (NoSuchElementException)
                         {
-                            dataGridView1.Rows.Add(line, "تم إرسال جرعه واحدة من هذا الطلب");
+                            try
+                            {
+                                IWebElement NVR = driver.FindElement(By.CssSelector("#js-page-content > form > div > div.panel-container.show > div > div.row.justify-content-end > button:nth-child(3)"));
+                                executor.ExecuteScript("arguments[0].click();", NVR);
+                                dataGridView1.Rows.Add(line, "NVR تم ارسال الى ");
+                                dataGridView1.Rows[i].Cells[1].Style.BackColor = Color.Green;
+                            }
+                            catch (NoSuchElementException)
+                            {
+                                dataGridView1.Rows.Add(line, "NVR مشكلة");
+                                dataGridView1.Rows[i].Cells[1].Style.BackColor = Color.Red;
+                            }
+                        }
+
+                    }
+
+                    catch (NoSuchElementException)
+                    {
+                        try
+                        {
+                            IWebElement NVRstate = driver.FindElement(By.XPath("/html/body/div[2]/div/div/main/form/div/div[2]/div/div[1]/table/tbody/tr/td[2]"));
+                            dataGridView1.Rows.Add(line, NVRstate.GetAttribute("innerHTML"));
                             dataGridView1.Rows[i].Cells[1].Style.BackColor = Color.Yellow;
                         }
-                        else
+                        catch (NoSuchElementException)
                         {
-                            dataGridView1.Rows.Add(line, "حدث خطأ أثناء ارسال الجرعات");
+                            dataGridView1.Rows.Add(line, "معالجة الطلب مشكلة");
                             dataGridView1.Rows[i].Cells[1].Style.BackColor = Color.Red;
                         }
                     }
-                
-                catch (NoSuchElementException)
-                {
-                    dataGridView1.Rows.Add(line, "معمول مسبقا");
-                    dataGridView1.Rows[i].Cells[1].Style.BackColor = Color.White;
+
+                    i++;
+                    total.Text = i + " / " + counter;
+                    comp.Text = line;
                 }
-                
-                i++;
-                total.Text = i + " / " + counter;
-                comp.Text = line;
             }
             
           
@@ -138,6 +178,7 @@ namespace WindowsFormsApp1
                 listBox1.Items.Add(line);
                 counter++;
             }
+            total.Text = "0 / " + counter;
 
         }
 
@@ -161,10 +202,13 @@ namespace WindowsFormsApp1
         {
 
         }
-
+   
         private void button4_Click(object sender, EventArgs e)
         {
             listBox1.Items.Clear();
+            lines = null;
+            
+            
         }
         public void CopyToClipboardWithHeaders(DataGridView _dgv)
         {
@@ -176,6 +220,7 @@ namespace WindowsFormsApp1
         }
         private void button5_Click(object sender, EventArgs e)
         {
+            
             CopyToClipboardWithHeaders(dataGridView1);
         }
 
